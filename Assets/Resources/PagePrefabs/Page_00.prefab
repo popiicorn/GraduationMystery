@@ -268,7 +268,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6137fbe7b23752f428415d8e71a01946, type: 2}
   - {fileID: 11400000, guid: 9a281dd927b591445a669ef45d95f97e, type: 2}
   - {fileID: 11400000, guid: cddc53388f3a7c04d97a1a467f6a30a9, type: 2}
-  - {fileID: 11400000, guid: 269fbd4cdce1dba499adb29d5751ee4f, type: 2}
+  - {fileID: 11400000, guid: 9b395cd5e633f2e4c87a8a640856b463, type: 2}
   initialTeacherCharacter: {fileID: 11400000, guid: 269fbd4cdce1dba499adb29d5751ee4f, type: 2}
 --- !u!1 &3367883844880917526
 GameObject:
