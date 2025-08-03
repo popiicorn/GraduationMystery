@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dce380e60bf80e40b877bf917dacf0a, type: 3}
   m_Name: Character_18
   m_EditorClassIdentifier: 
-  characterName: "\u91CE\u3005\u4E0A \u30EA\u30E7\u30A6"
+  characterName: "\u91CE\u5442 \u30EA\u30E7\u30A6"
   characterImages:
   - {fileID: 21300000, guid: e16103dbcf187464eac0487daa52d35a, type: 3}
   detailTexts:
