@@ -59,15 +59,79 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         if (!IsPointerOverImage(eventData)) return;
 
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        CheckForHiddenText(); // ドラッグ中に重なり判定を行う
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        // 必要なら終了処理を記述
+        // ドラッグ終了時の処理
+        CheckForHiddenText(true); // ドラッグ終了時にも重なり判定を行う
     }
 
     private bool IsPointerOverImage(PointerEventData eventData)
     {
         return image != null && image.IsRaycastLocationValid(eventData.position, eventData.enterEventCamera);
+    }
+
+    private void CheckForHiddenText(bool onDragEnd = false)
+    {
+        // RedSheetのRectTransformを取得
+        RectTransform redSheetRect = rectTransform;
+
+        // すべてのHiddenTextControllerを見つけて、RedSheetが完全に含まれているかを判定
+        HiddenTextController[] allHiddenTexts = FindObjectsOfType<HiddenTextController>();
+        bool isAnyHiddenTextRevealed = false;
+
+        foreach (var hiddenText in allHiddenTexts)
+        {
+            // HiddenTextのRectTransformを取得
+            RectTransform hiddenTextRect = hiddenText.GetComponent<RectTransform>();
+
+            if (hiddenTextRect != null && redSheetRect != null)
+            {
+                // RectTransformが完全に含まれているかを判定
+                if (IsFullyContained(redSheetRect, hiddenTextRect))
+                {
+                    hiddenText.SetRevealed(true);
+                    isAnyHiddenTextRevealed = true;
+                }
+                else if (!onDragEnd)
+                {
+                    hiddenText.SetRevealed(false);
+                }
+            }
+        }
+
+        if (onDragEnd && !isAnyHiddenTextRevealed)
+        {
+            foreach (var hiddenText in allHiddenTexts)
+            {
+                hiddenText.SetRevealed(false);
+            }
+        }
+    }
+
+    // RectTransformが別のRectTransformに完全に含まれているかを判定するメソッド
+    // contentがcontainerに完全に含まれている場合にtrueを返す
+    private bool IsFullyContained(RectTransform container, RectTransform content)
+    {
+        Vector3[] containerCorners = new Vector3[4];
+        Vector3[] contentCorners = new Vector3[4];
+        container.GetWorldCorners(containerCorners);
+        content.GetWorldCorners(contentCorners);
+
+        // contentのすべての角がcontainerの内部にあるかをチェック
+        for (int i = 0; i < 4; i++)
+        {
+            if (contentCorners[i].x < containerCorners[0].x ||
+                contentCorners[i].x > containerCorners[2].x ||
+                contentCorners[i].y < containerCorners[0].y ||
+                contentCorners[i].y > containerCorners[2].y)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
