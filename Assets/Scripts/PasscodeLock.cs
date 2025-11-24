@@ -1,32 +1,35 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // InputField (TMP) ‚ğg‚¤‚½‚ß‚É•K—v
+using TMPro; // InputField (TMP) ã‚’ä½¿ã†ãŸã‚ã«å¿…è¦
 
 public class PasscodeLock : MonoBehaviour
 {
     [Header("UI References")]
-    public TMP_InputField[] inputFields = new TMP_InputField[4]; // 4‚Â‚Ì”š•\¦ƒtƒB[ƒ‹ƒh
+    public TMP_InputField[] inputFields = new TMP_InputField[4]; // 4ã¤ã®æ•°å­—è¡¨ç¤ºãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰
 
-    public GameObject doorToOpen;        // y”ñ•\¦‚É‚·‚ézŒ³‚Ì”à‚ÌGameObject
-    public GameObject doorOpenObject;    // y•\¦‚·‚ézŠJ‚¢‚½Œã‚Ì”à‚â’Ê˜H‚ÌGameObject š‚±‚±‚ª’Ç‰Á‚³‚ê‚Ü‚µ‚½š
+    // ã€éè¡¨ç¤ºã«ã™ã‚‹ã€‘å…ƒã®æ‰‰ã‚„é–‰ã˜ãŸçŠ¶æ…‹ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ãƒªã‚¹ãƒˆ
+    public GameObject[] doorsToClose;
 
-    public GameObject passcodePanel;     // ƒpƒXƒR[ƒh“ü—Íƒpƒlƒ‹
+    // ã€è¡¨ç¤ºã™ã‚‹ã€‘é–‹ã„ãŸå¾Œã®æ‰‰ã‚„é€šè·¯ã€è¡¨ç¤ºã—ãŸã„ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ãƒªã‚¹ãƒˆ (é…åˆ—)
+    public GameObject[] doorsToOpen;
+
+    public GameObject passcodePanel;     // ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰å…¥åŠ›ãƒ‘ãƒãƒ«
 
     [Header("Settings")]
-    public int[] correctCode = { 1, 2, 3, 4 };          // ³‰ğ‚ÌˆÃØ”Ô† (Inspector‚Åİ’è)
-    private int[] currentCode = { 0, 0, 0, 0 };         // Œ»İ“ü—Í‚³‚ê‚Ä‚¢‚é”š
+    public int[] correctCode = { 1, 2, 3, 4 };          // æ­£è§£ã®æš—è¨¼ç•ªå· (Inspectorã§è¨­å®š)
+    private int[] currentCode = { 0, 0, 0, 0 };         // ç¾åœ¨å…¥åŠ›ã•ã‚Œã¦ã„ã‚‹æ•°å­—
 
     void Start()
     {
-        // ƒpƒlƒ‹”ñ•\¦‚ğˆê“I‚É‰ğœ‚·‚é‚½‚ßA‚±‚Ìs‚ÍƒRƒƒ“ƒgƒAƒEƒg‚ğŒp‘±‚µ‚Ü‚·
-        
+        // ãƒ‘ãƒãƒ«éè¡¨ç¤ºã‚’ä¸€æ™‚çš„ã«è§£é™¤ã™ã‚‹ãŸã‚ã€ã“ã®è¡Œã¯ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆã‚’ç¶™ç¶šã—ã¾ã™
+        /*
         if (passcodePanel != null)
         {
             passcodePanel.SetActive(false);
         }
-        
+        */
 
-        // ‹­§“I‚ÉInputField‚ÌƒeƒLƒXƒg‚ğƒNƒŠƒA
+        // å¼·åˆ¶çš„ã«InputFieldã®ãƒ†ã‚­ã‚¹ãƒˆã‚’ã‚¯ãƒªã‚¢
         for (int i = 0; i < inputFields.Length; i++)
         {
             if (inputFields[i] != null)
@@ -35,26 +38,36 @@ public class PasscodeLock : MonoBehaviour
             }
         }
 
-        // ‰Šúó‘Ô‚ÅAŠJ‚¢‚½”à‚ÌƒIƒuƒWƒFƒNƒg‚ğ”ñ•\¦‚É‚µ‚Ä‚¨‚­
-        if (doorOpenObject != null)
+        // åˆæœŸåŒ–å‡¦ç†: é–‹ã„ãŸæ‰‰ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ã™ã¹ã¦éè¡¨ç¤ºã«ã—ã¦ãŠã
+        if (doorsToOpen != null)
         {
-            doorOpenObject.SetActive(false);
+            foreach (GameObject obj in doorsToOpen)
+            {
+                if (obj != null)
+                {
+                    obj.SetActive(false);
+                }
+            }
         }
 
         UpdateDisplay();
     }
 
-    // ƒpƒXƒR[ƒhƒpƒlƒ‹‚ğ•\¦‚·‚éi”à‚ğƒNƒŠƒbƒN‚µ‚½‚È‚Ç‚ÉŒÄ‚Ño‚·j
+    // ãƒ‘ã‚¹ã‚³ãƒ¼ãƒ‰ãƒ‘ãƒãƒ«ã‚’è¡¨ç¤ºã™ã‚‹ï¼ˆãƒ­ãƒƒã‚«ãƒ¼ã‚’ã‚¯ãƒªãƒƒã‚¯ã—ãŸæ™‚ãªã©ã«å‘¼ã³å‡ºã™ï¼‰
     public void ShowPanel()
     {
         if (passcodePanel != null)
         {
             passcodePanel.SetActive(true);
         }
+
+        // â˜…Draggableã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ä½ç½®ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹å‡¦ç†â˜…
+        ResetAllDraggablePositions();
+
         UpdateDisplay();
     }
 
-    // ƒpƒlƒ‹‚ğ”ñ•\¦‚É‚·‚é
+    // ãƒ‘ãƒãƒ«ã‚’éè¡¨ç¤ºã«ã™ã‚‹
     public void HidePanel()
     {
         if (passcodePanel != null)
@@ -63,15 +76,15 @@ public class PasscodeLock : MonoBehaviour
         }
     }
 
-    // ”š‚ğXV‚·‚éƒƒ\ƒbƒh (UI Button‚©‚çŒÄ‚Ño‚·)
-    // index: 0`3 (‚Ç‚ÌŒ…‚©), direction: +1 (ã) ‚Ü‚½‚Í -1 (‰º)
+    // æ•°å­—ã‚’æ›´æ–°ã™ã‚‹ãƒ¡ã‚½ãƒƒãƒ‰ (UI Buttonã‹ã‚‰å‘¼ã³å‡ºã™)
+    // index: 0ï½3 (ã©ã®æ¡ã‹), direction: +1 (ä¸Š) ã¾ãŸã¯ -1 (ä¸‹)
     public void ChangeNumber(int index, int direction)
     {
         if (index < 0 || index >= 4) return;
 
         currentCode[index] += direction;
 
-        // 0`9‚Ì”ÍˆÍ‚Åƒ‰ƒbƒvƒAƒ‰ƒEƒ“ƒh
+        // 0ï½9ã®ç¯„å›²ã§ãƒ©ãƒƒãƒ—ã‚¢ãƒ©ã‚¦ãƒ³ãƒ‰
         if (currentCode[index] > 9)
         {
             currentCode[index] = 0;
@@ -84,12 +97,12 @@ public class PasscodeLock : MonoBehaviour
         UpdateDisplay();
     }
 
-    // UI‚Ì•\¦‚ğXV‚·‚é
+    // UIã®è¡¨ç¤ºã‚’æ›´æ–°ã™ã‚‹
     private void UpdateDisplay()
     {
         for (int i = 0; i < 4; i++)
         {
-            // InputField‚ÌƒeƒLƒXƒg‚ğŒ»İ‚Ì”š‚Éİ’è
+            // InputFieldã®ãƒ†ã‚­ã‚¹ãƒˆã‚’ç¾åœ¨ã®æ•°å­—ã«è¨­å®š
             if (inputFields[i] != null)
             {
                 inputFields[i].text = currentCode[i].ToString();
@@ -97,7 +110,7 @@ public class PasscodeLock : MonoBehaviour
         }
     }
 
-    // Šm”Fƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½‚Æ‚«‚Ìˆ—
+    // ç¢ºèªãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸã¨ãã®å‡¦ç†
     public void CheckCode()
     {
         bool isCorrect = true;
@@ -112,25 +125,50 @@ public class PasscodeLock : MonoBehaviour
 
         if (isCorrect)
         {
-            Debug.Log("ˆÃØ”Ô†‚ª³‰ğ‚µ‚Ü‚µ‚½I”à‚ğŠJ‚«‚Ü‚·B");
+            Debug.Log("æš—è¨¼ç•ªå·ãŒæ­£è§£ã—ã¾ã—ãŸï¼æ‰‰ã‚’é–‹ãã¾ã™ã€‚");
 
-            // 1. Œ³‚Ì”ài•Â‚¶‚½ó‘Ôj‚ğ”ñ•\¦‚É‚·‚é
-            if (doorToOpen != null)
+            // 1. å…ƒã®æ‰‰ï¼ˆé–‰ã˜ãŸçŠ¶æ…‹ï¼‰ã‚’ãƒªã‚¹ãƒˆå…¨ã¦éè¡¨ç¤ºã«ã™ã‚‹
+            if (doorsToClose != null)
             {
-                doorToOpen.SetActive(false);
+                foreach (GameObject obj in doorsToClose)
+                {
+                    if (obj != null)
+                    {
+                        obj.SetActive(false);
+                    }
+                }
             }
 
-            // 2. V‚µ‚¢ƒIƒuƒWƒFƒNƒgiŠJ‚¢‚½”à‚âŸ‚Ì’Ê˜Hj‚ğ•\¦‚·‚é
-            if (doorOpenObject != null)
+            // 2. æ–°ã—ã„ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆï¼ˆé–‹ã„ãŸæ‰‰ã‚„æ¬¡ã®é€šè·¯ï¼‰ã‚’ãƒªã‚¹ãƒˆå…¨ã¦è¡¨ç¤ºã™ã‚‹
+            if (doorsToOpen != null)
             {
-                doorOpenObject.SetActive(true);
+                foreach (GameObject obj in doorsToOpen)
+                {
+                    if (obj != null)
+                    {
+                        obj.SetActive(true);
+                    }
+                }
             }
 
             HidePanel();
         }
         else
         {
-            Debug.Log("ˆÃØ”Ô†‚ªŠÔˆá‚Á‚Ä‚¢‚Ü‚·B");
+            Debug.Log("æš—è¨¼ç•ªå·ãŒé–“é•ã£ã¦ã„ã¾ã™ã€‚");
+        }
+    }
+
+    // ã™ã¹ã¦ã®Draggableã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’æ¢ã—ã¦ãƒªã‚»ãƒƒãƒˆã™ã‚‹ãƒ¡ã‚½ãƒƒãƒ‰
+    private void ResetAllDraggablePositions()
+    {
+        Draggable[] allDraggables = FindObjectsOfType<Draggable>();
+        foreach (Draggable draggable in allDraggables)
+        {
+            if (draggable != null)
+            {
+                draggable.ResetPosition();
+            }
         }
     }
 }

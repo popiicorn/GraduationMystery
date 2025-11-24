@@ -14,6 +14,17 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     private Image image;
 
+    // ★追加★ Inspectorでリセット位置を上書きするための変数
+    [Header("リセット位置の強制上書き")]
+    public Vector2 resetPositionOverride = Vector2.zero;
+
+    private Vector2 initialPosition;
+
+    // Cornerの配列をクラス変数として宣言（メモリ最適化）
+    private readonly Vector3[] corners1 = new Vector3[4];
+    private readonly Vector3[] corners2 = new Vector3[4];
+
+
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -21,6 +32,21 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         image = GetComponent<Image>();
 
         TrySetAlphaThreshold();
+
+        // ★修正★: Awake時に初期位置を保存 (overrideが設定されていればそれを優先)
+        if (rectTransform != null)
+        {
+            if (resetPositionOverride == Vector2.zero)
+            {
+                // overrideがなければ、現在の位置を初期位置として保存
+                initialPosition = rectTransform.anchoredPosition;
+            }
+            else
+            {
+                // overrideがあれば、その値をinitialPositionとして扱う
+                initialPosition = resetPositionOverride;
+            }
+        }
     }
 
     private void TrySetAlphaThreshold()
@@ -29,15 +55,13 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         {
             Texture2D texture = image.sprite.texture;
 
-            // テクスチャが読み込み可能でCrunch圧縮でない場合のみ設定
             if (texture.isReadable && !IsCrunchCompressed(texture.format))
             {
                 image.alphaHitTestMinimumThreshold = alphaThreshold;
-                //Debug.Log("alphaHitTestMinimumThreshold 設定成功");
             }
             else
             {
-                Debug.LogWarning("alphaHitTestMinimumThreshold を設定できません（Textureが読み込み不可か、Crunch圧縮）この警告は問題なし");
+                Debug.LogWarning("alphaHitTestMinimumThreshold を設定できません（Textureが読み込み不可か、Crunch圧縮）");
             }
         }
     }
@@ -59,13 +83,23 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         if (!IsPointerOverImage(eventData)) return;
 
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
-        CheckForHiddenText(); // ドラッグ中に重なり判定を行う
+        CheckForHiddenText();
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        // ドラッグ終了時の処理
-        CheckForHiddenText(true); // ドラッグ終了時にも重なり判定を行う
+        CheckForHiddenText(true);
+    }
+
+    // ★修正★ ResetPosition() メソッド
+    public void ResetPosition()
+    {
+        if (rectTransform != null)
+        {
+            // initialPosition (Awake時に設定された強制位置または初期位置) にリセット
+            rectTransform.anchoredPosition = initialPosition;
+            CheckForHiddenText(true);
+        }
     }
 
     private bool IsPointerOverImage(PointerEventData eventData)
@@ -75,21 +109,16 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
     private void CheckForHiddenText(bool onDragEnd = false)
     {
-        // RedSheetのRectTransformを取得
         RectTransform redSheetRect = rectTransform;
-
-        // すべてのHiddenTextControllerを見つけて、RedSheetが完全に含まれているかを判定
         HiddenTextController[] allHiddenTexts = FindObjectsOfType<HiddenTextController>();
         bool isAnyHiddenTextRevealed = false;
 
         foreach (var hiddenText in allHiddenTexts)
         {
-            // HiddenTextのRectTransformを取得
             RectTransform hiddenTextRect = hiddenText.GetComponent<RectTransform>();
 
             if (hiddenTextRect != null && redSheetRect != null)
             {
-                // RectTransformが完全に含まれているかを判定
                 if (IsFullyContained(redSheetRect, hiddenTextRect))
                 {
                     hiddenText.SetRevealed(true);
@@ -111,22 +140,17 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
         }
     }
 
-    // RectTransformが別のRectTransformに完全に含まれているかを判定するメソッド
-    // contentがcontainerに完全に含まれている場合にtrueを返す
     private bool IsFullyContained(RectTransform container, RectTransform content)
     {
-        Vector3[] containerCorners = new Vector3[4];
-        Vector3[] contentCorners = new Vector3[4];
-        container.GetWorldCorners(containerCorners);
-        content.GetWorldCorners(contentCorners);
+        container.GetWorldCorners(corners1);
+        content.GetWorldCorners(corners2);
 
-        // contentのすべての角がcontainerの内部にあるかをチェック
         for (int i = 0; i < 4; i++)
         {
-            if (contentCorners[i].x < containerCorners[0].x ||
-                contentCorners[i].x > containerCorners[2].x ||
-                contentCorners[i].y < containerCorners[0].y ||
-                contentCorners[i].y > containerCorners[2].y)
+            if (corners2[i].x < corners1[0].x ||
+                corners2[i].x > corners1[2].x ||
+                corners2[i].y < corners1[0].y ||
+                corners2[i].y > corners1[2].y)
             {
                 return false;
             }
